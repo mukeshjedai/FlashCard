@@ -80,9 +80,15 @@
         $('#nextPage').toggle(end < questions.length);
     }
 
-    function submitAnswer(questionId, selectedOption, correctAnswer) {
+    function submitAnswer(questionId, selectedOption, correctAnswer, question, options) {
         console.log("Answer is: " + correctAnswer);
-        const answer = { [questionId]: selectedOption };
+        const answer = {
+            Id: questionId,
+            Question: question,
+            Options: options,
+            SelectedOption: selectedOption,
+            CorrectAnswer: correctAnswer
+        };
 
         $.ajax({
             url: '/Home/SubmitAnswer',
@@ -96,11 +102,31 @@
                     if ($(this).is(':checked')) {
                         if (option === correctAnswer) {
                             $(this).next('label').addClass('correct');
-                            
-                        } else {
+                       } else {
                             $(this).next('label').addClass('wrong');
-                            alert(correctAnswer);
-                            
+                            alert("Correct Answer: " + correctAnswer);
+
+                            // Insert wrong answer into the database
+                            const wrongAnswer = {
+                                Id: questionId,
+                                Question: question,
+                                Options: options,
+                                Answer: selectedOption,
+                                SoftDelete: "false"
+                            };
+
+                            $.ajax({
+                                url: '/Home/InsertWrongAnswer',
+                                method: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify(wrongAnswer),
+                                success: function () {
+                                    alert("Wrong answer recorded successfully.");
+                                },
+                                error: function () {
+                                    alert("Failed to record the wrong answer.");
+                                }
+                            });
                         }
                     }
 
